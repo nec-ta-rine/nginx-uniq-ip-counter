@@ -1,0 +1,25 @@
+version: '3.8'
+
+networks:
+  monitoring-net:
+    external: true # Создать сеть заранее
+
+services:
+  nginx-counter:
+    build: 
+      dockerfile: ./Dockerfile.nginx-counter
+    image: nginx-counter:python
+    container_name: nginx-counter
+    environment:
+      - REMOTE_HOST=<ip>  # Адрес удаленного хоста nginx
+      - REMOTE_USER=nginx-counter     # Имя пользователя на хосте nginx
+      - PRIVATE_KEY_PATH=/root/.ssh/id_rsa  # Путь в контейнере к приватному ключу пользователя
+      - LOG_FILE_PATH=/var/log/nginx/access.log  # Путь к файлу логов Nginx на хосте nginx
+      - PUSHGATEWAY_URL=http://pushgateway:9091  # URL Pushgateway
+      - FILTER_URL=mysite.ru
+    volumes:
+      - ./key:/root/.ssh:ro
+      - ./position.txt:/app/position.txt
+    restart: unless-stopped
+    networks:
+      - monitoring-net
